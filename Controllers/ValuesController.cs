@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -24,6 +25,28 @@ namespace JWTAuthentication.Controllers
             _config = config;
         }
 
+
+        [HttpPost("generateDocx/")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [ProducesResponseType(typeof(void), 400)]
+        [ProducesResponseType(typeof(void), 401)]
+        [ProducesResponseType(typeof(void), 415)]
+        [ProducesResponseType(typeof(void), 500)]
+        public async Task<IActionResult> GenerateDocx(
+           [Required(AllowEmptyStrings = false)][FromForm(Name = "parameters")][ModelBinder(BinderType = typeof(JsonModelBinder))] SchemaDataPair[] parameters,
+           [Required(AllowEmptyStrings = false)][FromForm(Name = "outputfilename")] string outputFileName,
+           [Required] IFormFile file)
+        {
+            if (string.IsNullOrWhiteSpace(outputFileName))
+            {
+                throw new ArgumentNullException(nameof(outputFileName));
+            }
+
+            //var document = _generationService.Generate(parameters, file.GetBinaryData());
+            //var docxFile = _pdfConverter.ConvertToDocx(document);
+            return Ok();
+        }
 
         [AllowAnonymous]
         [HttpPost("Login")]

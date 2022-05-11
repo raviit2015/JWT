@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,8 +30,9 @@ namespace JWTAuthentication
             services.AddControllersWithViews();
             services.AddMvc();
             JwtToken(services);
+            ConfigureSwaggerServices(services);
         }
-
+       
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -48,6 +50,8 @@ namespace JWTAuthentication
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            ConfigureSwagger(app, env);
+
             app.UseRouting();
 
             app.UseAuthorization();
@@ -57,6 +61,41 @@ namespace JWTAuthentication
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+        }
+
+        #region Private Methods
+
+        private void ConfigureSwagger(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(options =>
+            {
+                const string swaggerEndpointUrl = "swagger/v1/swagger.json";
+                options.SwaggerEndpoint(swaggerEndpointUrl, "Document Generation API v1");
+                options.RoutePrefix = string.Empty;
+            });
+        }
+        private void ConfigureSwaggerServices(IServiceCollection services)
+        {
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "Document Generation API",
+                    //Description = $"Document Generation API {APIVersionHelper.GetAPIVersion<Startup>()}",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "DXC Technology",
+                        Url = new Uri("https://dxc.technology"),
+                    },
+                });
+                // set the comments path for the Swagger JSON and UI
+                foreach (string xmlDocument in System.IO.Directory.EnumerateFiles(AppContext.BaseDirectory, "*.xml"))
+                {
+                    options.IncludeXmlComments(xmlDocument, includeControllerXmlComments: true);
+                }
             });
         }
 
@@ -78,5 +117,6 @@ namespace JWTAuthentication
            });
         }
 
+        #endregion
     }
 }
